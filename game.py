@@ -56,7 +56,7 @@ class Game:
             cribbage.extend(player.drop(player_cribbage_card_drop_count[n]))
 
     def play(self, players: List[Player]):
-        while any([len(player.play_hand) >= 0 for player in players]) and not self.is_game_over():
+        while any([len(player.play_hand) > 0 for player in players]) and not self.is_game_over():
             self.play_round(players)
 
     def play_round(self, players):
@@ -114,10 +114,10 @@ class Game:
                 state = "count"
 
             elif state == "count":
+                if counting_index + 1 == len(players):
+                    players[counting_index].score_cribbage(cribbage, cut)
+                    state = "end_round"
                 players[counting_index].score_hand(cut)
-                if counting_index - 1 == len(players):
-                    players[counting_index - 1].score_cribbage()
-                    state == "end_round"
                 counting_index += 1
             elif state == "end_round":
                 self.rotate(players)

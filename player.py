@@ -32,13 +32,16 @@ class Player:
         if len(playable_hand) == 0:
             return (None, 0)
 
+        # TODO: NE PAS CALCULER DEUX FOIS LES 15 sinon 4 points
         check_score_func = self.__check_15 if count < 15 else self.__check_31
-        plays = [check_score_func, self.__check_straight, self.__check_double]
+        plays = [self.__check_straight, self.__check_double]
         plays = [play(playable_hand, played_cards, count)
                  for play in plays]
         plays = [play for play in plays if play[0] is not None]
         if len(plays) == 0:
-            return choice([(card, 0) for card in playable_hand])
+            c = choice([(card, 0) for card in playable_hand])
+            self.play_hand.remove(c[0])
+            return c
         plays = [(play, score + check_score_func([play], played_cards, count)[1])
                  for play, score in plays]
         card, score = max(plays, key=lambda x: x[1])
@@ -97,7 +100,7 @@ class Player:
             last = (type, count)
         return l * mul if l >= 3 else 0
 
-    def __point_jack_color(hand, cut):
+    def __point_jack_color(self, hand, cut):
         jacks = [c for c in hand if c.type == 11]
         for jack in jacks:
             if jack.color == cut.color:
@@ -141,16 +144,21 @@ class Player:
         if len(played_cards) < 2:
             return (None, 0)
         for c in hand:
-            l = 0
-            last = c
-            for pc in reversed(played_cards.copy()):
-                if last.type - pc.type != 1:
-                    break
-                else:
-                    l += 1
-                    last = pc
-            if l >= 3:
-                return (c, l)
+            l = [c.type]
+            for pc in reversed([card.type for card in played_cards]):
+                l.append(pc)
+                if len(l) < 3:
+                    continue
+                sl = sorted(l)
+                last = sl.pop(0)
+                length = 1
+                for t in sl:
+                    if t - last != 1:
+                        break
+                    length += 1
+                    last = t
+                if length >= 3:
+                    return(c, length)
         return (None, 0)
 
     def __check_playable_hand(self, count):
